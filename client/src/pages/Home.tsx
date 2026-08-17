@@ -40,7 +40,7 @@ export default function Home() {
   return (
     <main className="minimal-page">
       <header className="topbar">
-        <Link href="/" className="wordmark"><span className="wordmark-mark"><span /><span /><span /><span /></span><span><b>HL · 汉林师兄</b><small>HL HANLIN SENIOR'S</small></span></Link>
+        <Link href="/" className="wordmark"><span className="wordmark-mark"><span /><span /><span /><span /></span><span><b>HL · 刘涵</b><small>HANK LAU · HANKLAU</small></span></Link>
         <nav className={menuOpen ? "topnav open" : "topnav"}>
           <a href="#modules">四大模块 <small>MODULES</small></a>
           <a href="#chapters">模板章节 <small>CHAPTERS</small></a>
@@ -50,11 +50,11 @@ export default function Home() {
       </header>
 
       <section className="minimal-hero">
-        <div className="hero-overline"><span /> HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</div>
-        <h1><small>HL</small> 汉林师兄的<br /><em>雅思模板库</em></h1>
-        <p>个人应试模板，清晰归档，随时复习。<br /><span>Personal templates. Clear structure. Your own route.</span></p>
+        <div className="hero-overline"><span /> HANK LAU'S IELTS TEMPLATE LIBRARY · HANKLAU</div>
+        <h1><small>HL</small> 刘涵的<br /><em>雅思模板库</em></h1>
+        <p>刘涵的个人应试模板，清晰归档，随时复习。<br /><span>Hank Lau's personal playbook. Clear structure. Your own route.</span></p>
         <a className="hero-link" href="#modules">进入四大模块 <ChevronRight size={15} /></a>
-        <div className="hero-orbit"><img src="/manus-storage/ielts-route-mark_238959ae.png" alt="Hanlin Senior IELTS library mark" /></div>
+        <div className="hero-orbit"><img src="/manus-storage/ielts-route-mark_238959ae.png" alt="Hank Lau IELTS library mark" /></div>
       </section>
 
       <section className="modules-section" id="modules">
@@ -95,7 +95,7 @@ export default function Home() {
         {activeKey === "speaking" && selectedSection === "Part 3" && <SpeakingPartThreePanel />}
       </section>
 
-      <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>HL · 汉林师兄的雅思模板库</b><small>HL HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
+      <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>HL · 刘涵的雅思模板库</b><small>HANK LAU'S IELTS TEMPLATE LIBRARY · HANKLAU</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
     </main>
   );
 }
