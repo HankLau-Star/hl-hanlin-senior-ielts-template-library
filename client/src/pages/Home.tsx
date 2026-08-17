@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { taskOneChecklist, taskOneTemplates } from "@/lib/writingTemplates";
 import { speakingPart2Cards, speakingPart2StudySteps } from "@/lib/speakingPart2Templates";
+import { languageBank, orefSteps, partOneExamples, personaDimensions, universalDetails } from "@/lib/speakingPart1System";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, X } from "lucide-react";
 
@@ -80,6 +81,7 @@ export default function Home() {
         </div>
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
+        {activeKey === "speaking" && selectedSection === "Part 1" && <SpeakingPartOnePanel />}
         {activeKey === "speaking" && selectedSection === "Part 2" && <SpeakingPartTwoPanel />}
       </section>
 
@@ -109,6 +111,20 @@ function TaskOnePanel() {
       </div>
       <div className="task-checklist"><div><span>考试只做这个 / EXAM CHECKLIST</span><strong>{activeTemplate === "dynamic" ? "动态图" : "静态图"}</strong></div><div className="checklist-items">{taskOneChecklist[activeTemplate].map((item) => <span key={item}>{item}</span>)}</div></div>
       <div className="task-warning"><b>最重要 / KEY RULE</b><span>模板可以删句，绝对不要为了写完模板而描述图里不存在的趋势。</span><small>You may remove sentences. Never describe a trend that does not appear in the chart.</small></div>
+    </div>
+  );
+}
+
+function SpeakingPartOnePanel() {
+  return (
+    <div className="speaking-part-one-panel">
+      <div className="speaking-one-head"><div><span className="active-label">SPEAKING / PART 1</span><h3>一版一表一人设 <em>OREF System</em></h3><p>以不变的人设、模板和细节，应对不断变化的题库。</p></div><div className="one-head-tag">PART 1<br /><small>PLAYBOOK</small></div></div>
+      <section className="one-section"><div className="one-section-title"><span>01</span><div><b>一版 / OREF</b><small>万能逻辑公式模板</small></div></div><div className="oref-grid">{orefSteps.map((step) => <article key={step.key}><strong>{step.key}</strong><div><h4>{step.name} <small>{step.chinese}</small></h4><p>{step.detail}</p>{step.starters.map((starter) => <span key={starter}>{starter}</span>)}</div></article>)}</div></section>
+      <section className="one-section"><div className="one-section-title"><span>02</span><div><b>一人设 / PERSONA MAP</b><small>六维专属人设映射表</small></div></div><div className="persona-grid">{personaDimensions.map((persona, index) => <article key={persona.label}><span>0{index + 1}</span><h4>{persona.label}<small>{persona.title}</small></h4><div className="persona-phrases">{persona.phrases.map((phrase) => <b key={phrase}>{phrase}</b>)}</div><p>{persona.topics}</p></article>)}</div></section>
+      <section className="one-section"><div className="one-section-title"><span>03</span><div><b>万能 / UNIVERSALS</b><small>没听懂、想不到或题目抽象时的插拔细节</small></div></div><div className="universal-grid">{universalDetails.map((item) => <article key={item.title}><h4>{item.title}<small>{item.titleEn}</small></h4><p>{item.fit}</p><blockquote>{item.quote}</blockquote></article>)}</div></section>
+      <section className="one-section language-section"><div className="one-section-title"><span>04</span><div><b>一表 / LANGUAGE BANK</b><small>高分语料与地道句式</small></div></div><div className="mbti-card"><b>王牌性格说明 / MBTI</b><p>{languageBank.mbti}</p></div><div className="language-grid"><div><span>提分表达 / KEY PHRASES</span>{languageBank.verbs.map((item) => <p key={item.english}><b>{item.english}</b><small>{item.chinese}</small></p>)}</div><div><span>频率表达 / TIME PHRASES</span>{languageBank.frequency.map((item) => <p key={item.english}><b>{item.english}</b><small>{item.chinese}</small></p>)}</div></div></section>
+      <section className="one-section"><div className="one-section-title"><span>05</span><div><b>实战 / LIVE ASSEMBLY</b><small>题目—框架—人设的组装示例</small></div></div><Accordion type="single" collapsible className="part-one-example-accordion">{partOneExamples.map((example, index) => <AccordionItem key={example.question} value={`example-${index}`}><AccordionTrigger className="part-one-example-trigger"><span>0{index + 1}</span><div><b>{example.question}</b><small>{example.chinese}</small></div></AccordionTrigger><AccordionContent className="part-one-example-content">{example.answer.map((sentence, sentenceIndex) => <p key={sentence}><span>{["O", "R", "E", "F"][sentenceIndex] ?? "U"}</span>{sentence}</p>)}</AccordionContent></AccordionItem>)}</Accordion></section>
+      <div className="part-one-reminder"><b>考场操作 / EXAM FLOW</b><span>任何题目先判断：连哪个人设？用 OREF 哪一步？是否需要万能细节或 MBTI？然后大声说出来并录音复盘。</span></div>
     </div>
   );
 }
