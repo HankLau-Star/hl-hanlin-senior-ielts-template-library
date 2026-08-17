@@ -8,6 +8,7 @@ import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publ
 import { publicTaskOnePrompts, publicTaskOneSources, type TaskOneKind } from "@/lib/publicTask1Index";
 import { partThreeLogicChains, partThreeSteps } from "@/lib/speakingPart3System";
 import { listeningCambridgeNotes, listeningPartGuide, listeningRules, listeningTerms } from "@/lib/listeningStudyGuide";
+import { readingCambridgeNotes, readingStrategies, readingTerms } from "@/lib/readingStudyGuide";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, Search, X } from "lucide-react";
 
@@ -86,6 +87,7 @@ export default function Home() {
         </div>
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
         {activeKey === "listening" && <ListeningGuidePanel />}
+        {activeKey === "reading" && <ReadingGuidePanel />}
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
         {activeKey === "writing" && selectedSection === "大作文" && <TaskTwoPanel />}
         {activeKey === "speaking" && selectedSection === "Part 1" && <SpeakingPartOnePanel />}
@@ -162,6 +164,27 @@ function ListeningGuidePanel() {
       <section className="listening-vocab"><div className="listening-section-title"><span>02</span><div><b>词汇与替换库 / VOCAB BANK</b><small>拼写、同义替换、易混词与场景词</small></div></div><div className="listening-vocab-controls"><div className="listening-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索词汇、中文、替换或套题" aria-label="搜索听力词汇" /></div><div className="listening-filter-row">{termFilters.map((item) => <button key={item} onClick={() => setTermFilter(item)} className={termFilter === item ? "active" : ""}>{item}</button>)}</div></div><div className="listening-term-list">{visibleTerms.map((item) => <article key={`${item.term}-${item.source ?? "base"}`}><div><b>{item.term}</b><small>{item.category}</small></div><p>{item.meaning}</p>{item.relation && <span>{item.relation}</span>}{item.source && <i>{item.source}</i>}</article>)}</div>{visibleTerms.length === 0 && <div className="listening-empty">没有找到匹配词条。可以搜索英文、中文或 Cambridge 套题编号。</div>}</section>
       <section className="listening-cambridge"><div className="listening-section-title"><span>03</span><div><b>剑桥套题笔记 / CAMBRIDGE NOTES</b><small>按套题回看错题规律与高频表达</small></div></div><Accordion type="single" collapsible className="listening-cambridge-accordion">{listeningCambridgeNotes.map((item) => <AccordionItem key={item.id} value={item.id}><AccordionTrigger className="listening-cambridge-trigger"><span>CAM</span><b>{item.title}</b></AccordionTrigger><AccordionContent className="listening-cambridge-content"><ul>{item.notes.map((note) => <li key={note}>{note}</li>)}</ul></AccordionContent></AccordionItem>)}</Accordion></section>
       <div className="listening-guide-rule"><b>复盘原则 / REVIEW RULE</b><span>听力规则是高概率提示，不是机械公式。每次做题仍需同时判断语义、限定条件、时态、数量和说话者态度。</span></div>
+    </div>
+  );
+}
+
+function ReadingGuidePanel() {
+  const [strategyFilter, setStrategyFilter] = useState<"全部" | "题型策略" | "判断题" | "逻辑信号" | "同义替换" | "定位">("全部");
+  const [termFilter, setTermFilter] = useState<"全部" | "同义替换" | "词义辨析" | "逻辑词" | "场景词" | "词形拼写">("全部");
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleStrategies = readingStrategies.filter((item) => strategyFilter === "全部" || item.category === strategyFilter);
+  const visibleTerms = readingTerms.filter((item) => (termFilter === "全部" || item.category === termFilter) && (!normalizedQuery || `${item.term} ${item.meaning} ${item.relation ?? ""} ${item.source ?? ""}`.toLowerCase().includes(normalizedQuery)));
+  const strategyFilters: (typeof strategyFilter)[] = ["全部", "题型策略", "判断题", "逻辑信号", "同义替换", "定位"];
+  const termFilters: (typeof termFilter)[] = ["全部", "同义替换", "词义辨析", "逻辑词", "场景词", "词形拼写"];
+  return (
+    <div className="reading-guide-panel">
+      <div className="reading-guide-head"><div><span className="active-label">READING / PLAYBOOK</span><h3>阅读真题手册 <em>Reading Field Notes</em></h3><p>先辨题型，再抓逻辑；不凭印象做判断，而是用原文中的关系、限定词和证据来确认答案。</p></div><div className="reading-guide-stat"><strong>{readingTerms.length}</strong><span>词条 / NOTES</span></div></div>
+      <section className="reading-focus-grid"><article><span>01</span><div><b>判断题</b><small>TRUE / FALSE / NOT GIVEN</small><p>先查是否冲突，再查是否缺失关键证据。</p></div></article><article><span>02</span><div><b>逻辑词</b><small>CAUSE · CONTRAST · LIMIT</small><p>consequently、however、only 等词决定句子关系。</p></div></article><article><span>03</span><div><b>同义替换</b><small>PARAPHRASE</small><p>认出改写，也比较词义强度与精确度。</p></div></article></section>
+      <section className="reading-strategies"><div className="reading-section-title"><span>01</span><div><b>题型策略与逻辑 / STRATEGY MAP</b><small>通过判断、转折、因果和限定词定位答案</small></div></div><div className="reading-filter-row">{strategyFilters.map((item) => <button key={item} className={strategyFilter === item ? "active" : ""} onClick={() => setStrategyFilter(item)}>{item}</button>)}</div><Accordion type="single" collapsible className="reading-strategy-accordion">{visibleStrategies.map((item, index) => <AccordionItem value={item.id} key={item.id}><AccordionTrigger className="reading-strategy-trigger"><span>0{index + 1}</span><div><b>{item.title}</b><small>{item.titleEn}</small></div><i>{item.category}</i></AccordionTrigger><AccordionContent className="reading-strategy-content"><p>{item.detail}</p>{item.note && <aside><b>提醒 / NOTE</b><span>{item.note}</span></aside>}</AccordionContent></AccordionItem>)}</Accordion></section>
+      <section className="reading-vocab"><div className="reading-section-title"><span>02</span><div><b>词汇与替换库 / VOCAB BANK</b><small>词义辨析、逻辑词、场景词和剑桥真题语境</small></div></div><div className="reading-vocab-controls"><div className="reading-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索词汇、中文、替换或套题" aria-label="搜索阅读词汇" /></div><div className="reading-filter-row">{termFilters.map((item) => <button key={item} className={termFilter === item ? "active" : ""} onClick={() => setTermFilter(item)}>{item}</button>)}</div></div><div className="reading-term-list">{visibleTerms.map((item) => <article key={`${item.term}-${item.source ?? "base"}`}><div><b>{item.term}</b><small>{item.category}</small></div><p>{item.meaning}</p>{item.relation && <span>{item.relation}</span>}{item.source && <i>{item.source}</i>}</article>)}</div>{visibleTerms.length === 0 && <div className="reading-empty">没有找到匹配词条。可以搜索英文、中文或 Cambridge 套题编号。</div>}</section>
+      <section className="reading-cambridge"><div className="reading-section-title"><span>03</span><div><b>剑桥套题笔记 / CAMBRIDGE NOTES</b><small>按套题回看题型、逻辑与高频词</small></div></div><Accordion type="single" collapsible className="reading-cambridge-accordion">{readingCambridgeNotes.map((item) => <AccordionItem key={item.id} value={item.id}><AccordionTrigger className="reading-cambridge-trigger"><span>CAM</span><b>{item.title}</b></AccordionTrigger><AccordionContent className="reading-cambridge-content"><ul>{item.notes.map((note) => <li key={note}>{note}</li>)}</ul></AccordionContent></AccordionItem>)}</Accordion></section>
+      <div className="reading-guide-rule"><b>复盘原则 / REVIEW RULE</b><span>判断题不要猜“意思差不多”。只问一件事：原文是否明确支持、明确反驳，还是缺少决定题干真伪的关键证据？</span></div>
     </div>
   );
 }
