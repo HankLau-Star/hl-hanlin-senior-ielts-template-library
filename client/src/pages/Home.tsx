@@ -106,7 +106,7 @@ function markTaskTwoFill(text: string) {
 
 function TaskTwoBlocks({ blocks, showChinese }: { blocks: TaskTwoBlock[]; showChinese: boolean }) {
   return (
-    <Accordion type="multiple" defaultValue={[blocks[0].id]} className="task-two-accordion">
+    <Accordion type="single" collapsible className="task-two-accordion">
       {blocks.map((block, index) => <AccordionItem key={block.id} value={block.id} className="task-two-item">
         <AccordionTrigger className="task-two-trigger"><span>0{index + 1}</span><div><b>{block.label}</b><strong>{block.title}</strong></div></AccordionTrigger>
         <AccordionContent className="task-two-content"><div className="task-two-english"><small>固定英文句 / FIXED SENTENCE</small><p>{markTaskTwoFill(block.english)}</p></div>{showChinese && <div className="task-two-chinese"><small>中文逻辑 / CHINESE LOGIC</small><p>{markTaskTwoFill(block.chinese)}</p></div>}<div className="task-two-fills"><span>本段要填</span>{block.fills.map((fill) => <b key={fill}>{fill}</b>)}</div>{block.notes && <aside className="task-two-notes"><span>批注 / COACH NOTES</span>{block.notes.map((note) => <p key={note}>{markTaskTwoFill(note)}</p>)}</aside>}</AccordionContent>
@@ -117,7 +117,7 @@ function TaskTwoBlocks({ blocks, showChinese }: { blocks: TaskTwoBlock[]; showCh
 
 function TaskTwoPanel() {
   const [activeType, setActiveType] = useState("agree");
-  const [showChinese, setShowChinese] = useState(true);
+  const [showChinese, setShowChinese] = useState(false);
   const active = taskTwoTypes.find((item) => item.id === activeType) ?? taskTwoTypes[0];
   const isOpinion = active.id !== "report";
   const blocks = isOpinion ? opinionBlocks : reportBlocks;
