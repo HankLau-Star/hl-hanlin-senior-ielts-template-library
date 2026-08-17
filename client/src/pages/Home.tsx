@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { taskOneChecklist, taskOneTemplates } from "@/lib/writingTemplates";
+import { opinionBlocks, opinionOpenings, reportBlocks, taskTwoExamFlow, taskTwoTypes, type TaskTwoBlock } from "@/lib/taskTwoTemplates";
 import { speakingPart2Cards, speakingPart2StudySteps } from "@/lib/speakingPart2Templates";
 import { languageBank, orefSteps, partOneExamples, personaDimensions, universalDetails } from "@/lib/speakingPart1System";
 import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publicPart2Index";
@@ -84,6 +85,7 @@ export default function Home() {
         </div>
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
+        {activeKey === "writing" && selectedSection === "大作文" && <TaskTwoPanel />}
         {activeKey === "speaking" && selectedSection === "Part 1" && <SpeakingPartOnePanel />}
         {activeKey === "speaking" && selectedSection === "Part 2" && <SpeakingPartTwoPanel />}
         {activeKey === "speaking" && selectedSection === "Part 3" && <SpeakingPartThreePanel />}
@@ -91,6 +93,53 @@ export default function Home() {
 
       <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>HL · 汉林师兄的雅思模板库</b><small>HL HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
     </main>
+  );
+}
+
+function markTaskTwoFill(text: string) {
+  return text.split(/(【[^】]+】)/g).map((part, index) => part.startsWith("【") ? <span className="task-two-fill" key={`${part}-${index}`}>{part}</span> : part);
+}
+
+function TaskTwoBlocks({ blocks, showChinese }: { blocks: TaskTwoBlock[]; showChinese: boolean }) {
+  return (
+    <Accordion type="multiple" defaultValue={[blocks[0].id]} className="task-two-accordion">
+      {blocks.map((block, index) => <AccordionItem key={block.id} value={block.id} className="task-two-item">
+        <AccordionTrigger className="task-two-trigger"><span>0{index + 1}</span><div><b>{block.label}</b><strong>{block.title}</strong></div></AccordionTrigger>
+        <AccordionContent className="task-two-content"><div className="task-two-english"><small>固定英文句 / FIXED SENTENCE</small><p>{markTaskTwoFill(block.english)}</p></div>{showChinese && <div className="task-two-chinese"><small>中文逻辑 / CHINESE LOGIC</small><p>{markTaskTwoFill(block.chinese)}</p></div>}<div className="task-two-fills"><span>本段要填</span>{block.fills.map((fill) => <b key={fill}>{fill}</b>)}</div>{block.notes && <aside className="task-two-notes"><span>批注 / COACH NOTES</span>{block.notes.map((note) => <p key={note}>{markTaskTwoFill(note)}</p>)}</aside>}</AccordionContent>
+      </AccordionItem>)}
+    </Accordion>
+  );
+}
+
+function TaskTwoPanel() {
+  const [activeType, setActiveType] = useState("agree");
+  const [showChinese, setShowChinese] = useState(true);
+  const active = taskTwoTypes.find((item) => item.id === activeType) ?? taskTwoTypes[0];
+  const isOpinion = active.id !== "report";
+  const blocks = isOpinion ? opinionBlocks : reportBlocks;
+
+  return (
+    <div className="task-two-panel">
+      <div className="task-two-head">
+        <div><span className="active-label">WRITING / TASK 2</span><h3>大作文 <em>Task 2</em></h3><p>四种题型，两套母模板；先辨题，再落笔。</p></div>
+        <button className="task-two-language" type="button" onClick={() => setShowChinese(!showChinese)}>{showChinese ? "隐藏中文逻辑" : "显示中文逻辑"}<small>{showChinese ? "EN ONLY" : "EN + 中文"}</small></button>
+      </div>
+
+      <section className="task-two-map">
+        <div className="task-two-map-head"><div><span>题型—模板路线图</span><b>Question → Template</b></div><small>先点题型，再读对应轨道</small></div>
+        <div className="task-two-route"><span>固定结构 · 观点型轨道</span><i /><span>临场判断／填空</span></div>
+        <div className="task-two-type-grid">{taskTwoTypes.map((type) => <button type="button" key={type.id} className={activeType === type.id ? "active" : ""} onClick={() => setActiveType(type.id)}><span>{type.no}</span><b>{type.title}</b><small>{type.titleEn}</small><em>{type.template}</em></button>)}</div>
+        <div className="task-two-prompt"><div><small>当前题型 / ACTIVE TYPE</small><strong>{active.title} <em>· {active.focus}</em></strong><p>“{active.prompt}”</p></div><span>{active.template}</span></div>
+      </section>
+
+      <section className="task-two-template">
+        <div className="task-two-template-head"><div><span>{isOpinion ? "观点型母模板 / OPINION TRACK" : "报告型母模板 / REPORT TRACK"}</span><h4>{isOpinion ? "开—让—转—结" : "问题—原因—措施—可解决"}</h4><p>{isOpinion ? "同意与否、双边讨论和利弊权衡共用主体段与结尾；只需按题型选择开头。" : "原因与对策类按问题、原因与双层措施展开；若问问题与解决方案，主体段 1 改写问题或后果即可。"}</p></div><div className="task-two-track-stat"><b>{isOpinion ? "3" : "1"}</b><span>{isOpinion ? "题型共用一条轨道" : "题型使用一条轨道"}</span></div></div>
+        {isOpinion && <div className="task-two-openings"><div className="task-two-section-title"><span>01</span><div><b>开头段 / OPENING SWITCH</b><small>三种开头，后文共用</small></div></div><Accordion type="single" collapsible className="task-two-opening-accordion">{opinionOpenings.map((opening, index) => <AccordionItem key={opening.id} value={opening.id}><AccordionTrigger className="task-two-opening-trigger"><span>0{index + 1}</span><div><b>{opening.label}</b><small>{opening.title}</small></div></AccordionTrigger><AccordionContent className="task-two-opening-content"><p className="task-two-opening-en">{markTaskTwoFill(opening.english)}</p>{showChinese && <p className="task-two-opening-zh">{markTaskTwoFill(opening.chinese)}</p>}<div className="task-two-fills"><span>开头要填</span>{opening.fills.map((fill) => <b key={fill}>{fill}</b>)}</div>{opening.notes?.map((note) => <p className="task-two-inline-note" key={note}>{note}</p>)}</AccordionContent></AccordionItem>)}</Accordion></div>}
+        <TaskTwoBlocks blocks={blocks} showChinese={showChinese} />
+      </section>
+
+      <section className="task-two-flow"><div><span>考场操作 / EXAM FLOW</span><h4>40 分钟，按轨道走完。</h4></div><div className="task-two-flow-grid">{taskTwoExamFlow.map((step) => <article key={step.time + step.title}><b>{step.time}</b><div><strong>{step.title}</strong><p>{step.text}</p></div></article>)}</div><aside><b>最重要 / KEY RULE</b><span>模板服务于题目相关性。真正需要临场创造的，是两个理由、一个例子和一个局限；不要为了套句而写与题目无关的内容。</span></aside></section>
+    </div>
   );
 }
 
