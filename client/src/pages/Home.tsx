@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { taskOneChecklist, taskOneTemplates } from "@/lib/writingTemplates";
+import { speakingPart2Cards, speakingPart2StudySteps } from "@/lib/speakingPart2Templates";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, X } from "lucide-react";
 
 /** Design reminder: Apple-inspired calm glass study tool; minimal copy, bilingual hierarchy, four modules first. */
@@ -78,6 +80,7 @@ export default function Home() {
         </div>
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
+        {activeKey === "speaking" && selectedSection === "Part 2" && <SpeakingPartTwoPanel />}
       </section>
 
       <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>HL · 汉林师兄的雅思模板库</b><small>HL HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
@@ -106,6 +109,38 @@ function TaskOnePanel() {
       </div>
       <div className="task-checklist"><div><span>考试只做这个 / EXAM CHECKLIST</span><strong>{activeTemplate === "dynamic" ? "动态图" : "静态图"}</strong></div><div className="checklist-items">{taskOneChecklist[activeTemplate].map((item) => <span key={item}>{item}</span>)}</div></div>
       <div className="task-warning"><b>最重要 / KEY RULE</b><span>模板可以删句，绝对不要为了写完模板而描述图里不存在的趋势。</span><small>You may remove sentences. Never describe a trend that does not appear in the chart.</small></div>
+    </div>
+  );
+}
+
+function SpeakingPartTwoPanel() {
+  return (
+    <div className="speaking-part-two-panel">
+      <div className="speaking-panel-head">
+        <div><span className="active-label">SPEAKING / PART 2</span><h3>四张母题卡 <em>4 Core Stories</em></h3><p>人物、物品、经历、地点 · 用真实个人素材快速串题。</p></div>
+        <div className="speaking-panel-stat"><strong>4</strong><span>母题 / STORIES</span><small>Personal · Reusable · Adaptable</small></div>
+      </div>
+      <div className="speaking-panel-intro"><b>使用方法 / HOW TO USE</b><span>先用 5 秒把题目归类到一张卡，再根据题目重点切换对应句子；后续可继续把真题题目与母题卡建立适配关系。</span></div>
+      <Accordion type="single" collapsible className="speaking-card-accordion">
+        {speakingPart2Cards.map((card, index) => <AccordionItem value={card.id} key={card.id} className="speaking-story-card">
+          <AccordionTrigger className="speaking-story-trigger">
+            <span className="speaking-card-no">0{index + 1}</span>
+            <span className="speaking-card-title"><strong>{card.category} · {card.title}</strong><small>{card.categoryEn} · {card.titleEn}</small></span>
+            <span className="speaking-coverage-count">{card.coverage.length} topics<br /><small>可串题</small></span>
+          </AccordionTrigger>
+          <AccordionContent className="speaking-story-content">
+            <div className="speaking-section-label">COVERS / 可覆盖题目</div>
+            <div className="coverage-grid">{card.coverage.map((item) => <div className="coverage-item" key={item.english}><b>{item.english}</b><small>{item.chinese}</small></div>)}</div>
+            <div className="speaking-section-label script-label">7.5 SCRIPT / 逐句中英文讲稿</div>
+            <div className="script-lines">{card.script.map((line, lineIndex) => <div className="script-line" key={line.english}><span>{lineIndex + 1}</span><div><p>{line.english}</p><small>{line.chinese}</small></div></div>)}</div>
+            <div className="speaking-bottom-grid">
+              <div><div className="speaking-section-label">KEY PHRASES / 高分表达</div><div className="phrase-list">{card.phrases.map((phrase) => <div key={phrase.english}><b>{phrase.english}</b><small>{phrase.chinese}</small></div>)}</div></div>
+              <div><div className="speaking-section-label">PIVOT TIPS / 转题提示</div><div className="pivot-list">{card.tips.map((tip) => <div key={tip.prompt}><b>{tip.prompt}</b><small>{tip.advice}</small></div>)}</div></div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>)}
+      </Accordion>
+      <div className="speaking-study-steps"><div><span>考前落地 / STUDY PLAN</span><strong>三步法</strong></div><div>{speakingPart2StudySteps.map((step, index) => <p key={step}><b>0{index + 1}</b>{step}</p>)}</div></div>
     </div>
   );
 }
