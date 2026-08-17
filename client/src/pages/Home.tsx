@@ -5,6 +5,7 @@ import { speakingPart2Cards, speakingPart2StudySteps } from "@/lib/speakingPart2
 import { languageBank, orefSteps, partOneExamples, personaDimensions, universalDetails } from "@/lib/speakingPart1System";
 import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publicPart2Index";
 import { publicTaskOnePrompts, publicTaskOneSources, type TaskOneKind } from "@/lib/publicTask1Index";
+import { partThreeLogicChains, partThreeSteps } from "@/lib/speakingPart3System";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, Search, X } from "lucide-react";
 
@@ -85,6 +86,7 @@ export default function Home() {
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
         {activeKey === "speaking" && selectedSection === "Part 1" && <SpeakingPartOnePanel />}
         {activeKey === "speaking" && selectedSection === "Part 2" && <SpeakingPartTwoPanel />}
+        {activeKey === "speaking" && selectedSection === "Part 3" && <SpeakingPartThreePanel />}
       </section>
 
       <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>HL · 汉林师兄的雅思模板库</b><small>HL HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
@@ -151,6 +153,17 @@ function SpeakingPartOnePanel() {
       <section className="one-section language-section"><div className="one-section-title"><span>04</span><div><b>一表 / LANGUAGE BANK</b><small>高分语料与地道句式</small></div></div><div className="mbti-card"><b>王牌性格说明 / MBTI</b><p>{languageBank.mbti}</p></div><div className="language-grid"><div><span>提分表达 / KEY PHRASES</span>{languageBank.verbs.map((item) => <p key={item.english}><b>{item.english}</b><small>{item.chinese}</small></p>)}</div><div><span>频率表达 / TIME PHRASES</span>{languageBank.frequency.map((item) => <p key={item.english}><b>{item.english}</b><small>{item.chinese}</small></p>)}</div></div></section>
       <section className="one-section"><div className="one-section-title"><span>05</span><div><b>实战 / LIVE ASSEMBLY</b><small>题目—框架—人设的组装示例</small></div></div><Accordion type="single" collapsible className="part-one-example-accordion">{partOneExamples.map((example, index) => <AccordionItem key={example.question} value={`example-${index}`}><AccordionTrigger className="part-one-example-trigger"><span>0{index + 1}</span><div><b>{example.question}</b><small>{example.chinese}</small></div></AccordionTrigger><AccordionContent className="part-one-example-content">{example.answer.map((sentence, sentenceIndex) => <p key={sentence}><span>{["O", "R", "E", "F"][sentenceIndex] ?? "U"}</span>{sentence}</p>)}</AccordionContent></AccordionItem>)}</Accordion></section>
       <div className="part-one-reminder"><b>考场操作 / EXAM FLOW</b><span>任何题目先判断：连哪个人设？用 OREF 哪一步？是否需要万能细节或 MBTI？然后大声说出来并录音复盘。</span></div>
+    </div>
+  );
+}
+
+function SpeakingPartThreePanel() {
+  return (
+    <div className="speaking-part-three-panel">
+      <div className="speaking-three-head"><div><span className="active-label">SPEAKING / PART 3</span><h3>一框架 · 五逻辑链 <em>Logic Chain System</em></h3><p>用完整逻辑链回答抽象问题；先选择一条解释路径，再把它展开成 6 步表达。</p></div><div className="three-head-mark"><b>1</b><span>FRAME</span><b>5</b><span>CHAINS</span></div></div>
+      <section className="three-framework"><div className="three-section-head"><span>01</span><div><b>万能主框架 / MASTER FRAME</b><small>六步递进拓展</small></div></div><div className="part-three-steps">{partThreeSteps.map((step) => <article key={step.index}><span>{step.index}</span><div><h4>{step.title}<small>{step.titleEn}</small></h4><p>{step.sentence}</p></div></article>)}</div></section>
+      <section className="three-chains"><div className="three-section-head"><span>02</span><div><b>五大万能逻辑链 / FIVE CHAINS</b><small>根据题目选择一条核心解释路径</small></div></div><Accordion type="single" collapsible className="logic-chain-accordion">{partThreeLogicChains.map((chain, index) => <AccordionItem key={chain.id} value={chain.id} className="logic-chain-item"><AccordionTrigger className="logic-chain-trigger"><span>0{index + 1}</span><div><b>{chain.title}</b><small>{chain.titleEn} · {chain.description}</small></div><i>{chain.fits.length} 场景</i></AccordionTrigger><AccordionContent className="logic-chain-content"><div className="chain-fits"><span>适用场景 / FITS</span><div>{chain.fits.map((fit) => <b key={fit}>{fit}</b>)}</div></div><div className="chain-sentences">{chain.sentences.map((sentence, sentenceIndex) => <article key={sentence.english}><span>0{sentenceIndex + 1}</span><div><p>{sentence.english}</p><small>{sentence.chinese}</small></div></article>)}</div><div className="chain-usage"><b>如何接入 / HOW TO PLUG IN</b><span>把本逻辑链中的第 1 句放在第 2 步“核心逻辑”，第 2 句放在第 4 步“补充逻辑”，再用具体生活场景完成第 3 与第 6 步。</span></div></AccordionContent></AccordionItem>)}</Accordion></section>
+      <div className="part-three-reminder"><b>考场操作 / EXAM FLOW</b><span>遇到抽象题，先用缓冲句争取时间；从五条逻辑链中选一条主链，再补一个具体例子，最后做让步或场景收尾。</span></div>
     </div>
   );
 }
