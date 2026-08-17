@@ -7,6 +7,7 @@ import { languageBank, orefSteps, partOneExamples, personaDimensions, universalD
 import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publicPart2Index";
 import { publicTaskOnePrompts, publicTaskOneSources, type TaskOneKind } from "@/lib/publicTask1Index";
 import { partThreeLogicChains, partThreeSteps } from "@/lib/speakingPart3System";
+import { listeningCambridgeNotes, listeningPartGuide, listeningRules, listeningTerms } from "@/lib/listeningStudyGuide";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, Search, X } from "lucide-react";
 
@@ -84,6 +85,7 @@ export default function Home() {
           </button>)}
         </div>
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
+        {activeKey === "listening" && <ListeningGuidePanel />}
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
         {activeKey === "writing" && selectedSection === "大作文" && <TaskTwoPanel />}
         {activeKey === "speaking" && selectedSection === "Part 1" && <SpeakingPartOnePanel />}
@@ -139,6 +141,27 @@ function TaskTwoPanel() {
       </section>
 
       <section className="task-two-flow"><div><span>考场操作 / EXAM FLOW</span><h4>40 分钟，按轨道走完。</h4></div><div className="task-two-flow-grid">{taskTwoExamFlow.map((step) => <article key={step.time + step.title}><b>{step.time}</b><div><strong>{step.title}</strong><p>{step.text}</p></div></article>)}</div><aside><b>最重要 / KEY RULE</b><span>模板服务于题目相关性。真正需要临场创造的，是两个理由、一个例子和一个局限；不要为了套句而写与题目无关的内容。</span></aside></section>
+    </div>
+  );
+}
+
+function ListeningGuidePanel() {
+  const [ruleFilter, setRuleFilter] = useState<"全部" | "策略" | "题型规律" | "信号词" | "同义替换" | "拼写">("全部");
+  const [termFilter, setTermFilter] = useState<"全部" | "拼写" | "同义替换" | "易混词" | "场景词" | "信号词">("全部");
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleRules = listeningRules.filter((item) => ruleFilter === "全部" || item.category === ruleFilter);
+  const visibleTerms = listeningTerms.filter((item) => (termFilter === "全部" || item.category === termFilter) && (!normalizedQuery || `${item.term} ${item.meaning} ${item.relation ?? ""} ${item.source ?? ""}`.toLowerCase().includes(normalizedQuery)));
+  const ruleFilters: (typeof ruleFilter)[] = ["全部", "策略", "题型规律", "信号词", "同义替换", "拼写"];
+  const termFilters: (typeof termFilter)[] = ["全部", "拼写", "同义替换", "易混词", "场景词", "信号词"];
+  return (
+    <div className="listening-guide-panel">
+      <div className="listening-guide-head"><div><span className="active-label">LISTENING / PLAYBOOK</span><h3>听力复习手册 <em>Listening Field Notes</em></h3><p>先看题，再定位；抓信号词，也识别同义替换。把每一次错题整理成下一次的预判。</p></div><div className="listening-guide-stat"><strong>{listeningTerms.length}</strong><span>词条 / NOTES</span></div></div>
+      <section className="listening-part-grid">{listeningPartGuide.map((item, index) => <article key={item.part}><span>0{index + 1}</span><div><b>{item.part}</b><h4>{item.title}<small>{item.titleEn}</small></h4><p>{item.detail}</p></div></article>)}</section>
+      <section className="listening-rules"><div className="listening-section-title"><span>01</span><div><b>题型策略与信号 / STRATEGY MAP</b><small>按类别快速回顾解题原则</small></div></div><div className="listening-filter-row">{ruleFilters.map((item) => <button key={item} onClick={() => setRuleFilter(item)} className={ruleFilter === item ? "active" : ""}>{item}</button>)}</div><Accordion type="single" collapsible className="listening-rule-accordion">{visibleRules.map((item, index) => <AccordionItem value={item.id} key={item.id}><AccordionTrigger className="listening-rule-trigger"><span>0{index + 1}</span><div><b>{item.title}</b><small>{item.titleEn}</small></div><i>{item.part} · {item.category}</i></AccordionTrigger><AccordionContent className="listening-rule-content"><p>{item.detail}</p>{item.note && <aside><b>提醒 / NOTE</b><span>{item.note}</span></aside>}</AccordionContent></AccordionItem>)}</Accordion></section>
+      <section className="listening-vocab"><div className="listening-section-title"><span>02</span><div><b>词汇与替换库 / VOCAB BANK</b><small>拼写、同义替换、易混词与场景词</small></div></div><div className="listening-vocab-controls"><div className="listening-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索词汇、中文、替换或套题" aria-label="搜索听力词汇" /></div><div className="listening-filter-row">{termFilters.map((item) => <button key={item} onClick={() => setTermFilter(item)} className={termFilter === item ? "active" : ""}>{item}</button>)}</div></div><div className="listening-term-list">{visibleTerms.map((item) => <article key={`${item.term}-${item.source ?? "base"}`}><div><b>{item.term}</b><small>{item.category}</small></div><p>{item.meaning}</p>{item.relation && <span>{item.relation}</span>}{item.source && <i>{item.source}</i>}</article>)}</div>{visibleTerms.length === 0 && <div className="listening-empty">没有找到匹配词条。可以搜索英文、中文或 Cambridge 套题编号。</div>}</section>
+      <section className="listening-cambridge"><div className="listening-section-title"><span>03</span><div><b>剑桥套题笔记 / CAMBRIDGE NOTES</b><small>按套题回看错题规律与高频表达</small></div></div><Accordion type="single" collapsible className="listening-cambridge-accordion">{listeningCambridgeNotes.map((item) => <AccordionItem key={item.id} value={item.id}><AccordionTrigger className="listening-cambridge-trigger"><span>CAM</span><b>{item.title}</b></AccordionTrigger><AccordionContent className="listening-cambridge-content"><ul>{item.notes.map((note) => <li key={note}>{note}</li>)}</ul></AccordionContent></AccordionItem>)}</Accordion></section>
+      <div className="listening-guide-rule"><b>复盘原则 / REVIEW RULE</b><span>听力规则是高概率提示，不是机械公式。每次做题仍需同时判断语义、限定条件、时态、数量和说话者态度。</span></div>
     </div>
   );
 }
