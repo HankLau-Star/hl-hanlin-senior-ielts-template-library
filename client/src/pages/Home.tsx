@@ -6,6 +6,7 @@ import { languageBank, orefSteps, partOneExamples, personaDimensions, universalD
 import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publicPart2Index";
 import { publicTaskOnePrompts, publicTaskOneSources, type TaskOneKind } from "@/lib/publicTask1Index";
 import { partThreeLogicChains, partThreeSteps } from "@/lib/speakingPart3System";
+import { reportTemplate, taskTwoFillHints, taskTwoTypes, taskTwoUsage, viewpointIntroductions, viewpointTemplate } from "@/lib/writingTask2Templates";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, Search, X } from "lucide-react";
 
@@ -84,6 +85,7 @@ export default function Home() {
         </div>
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
         {activeKey === "writing" && selectedSection === "小作文" && <TaskOnePanel />}
+        {activeKey === "writing" && selectedSection === "大作文" && <TaskTwoPanel />}
         {activeKey === "speaking" && selectedSection === "Part 1" && <SpeakingPartOnePanel />}
         {activeKey === "speaking" && selectedSection === "Part 2" && <SpeakingPartTwoPanel />}
         {activeKey === "speaking" && selectedSection === "Part 3" && <SpeakingPartThreePanel />}
@@ -140,6 +142,22 @@ function PublicTaskOneIndex() {
       {visiblePrompts.length === 0 && <div className="prompt-empty">未找到匹配题目。可尝试图表类型或“地图”“变化”等关键词。</div>}
       <div className="task-index-sources"><span>来源 / SOURCES</span>{publicTaskOneSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}<ArrowUpRight size={12} /></a>)}</div>
     </section>
+  );
+}
+
+function TaskTwoPanel() {
+  const [activeTemplate, setActiveTemplate] = useState<"viewpoint" | "report">("viewpoint");
+  const activeParagraphs = activeTemplate === "viewpoint" ? viewpointTemplate : reportTemplate;
+  const activeTypes = taskTwoTypes.filter((item) => item.templateId === activeTemplate);
+  return (
+    <div className="task-two-panel">
+      <div className="task-two-head"><div><span className="active-label">WRITING / TASK 2</span><h3>大作文 <em>Task 2</em></h3><p>四种题型 · 两套母模板 · 先识别题型，再选择模板。</p></div><div className="task-two-tabs"><button className={activeTemplate === "viewpoint" ? "active" : ""} onClick={() => setActiveTemplate("viewpoint")}><span>观点型</span><small>Viewpoint · 3 types</small></button><button className={activeTemplate === "report" ? "active" : ""} onClick={() => setActiveTemplate("report")}><span>报告型</span><small>Report · 1 type</small></button></div></div>
+      <section className="task-two-types"><div className="task-two-section-title"><span>01</span><div><b>题型—模板对应 / TYPE MAP</b><small>四种题型，一眼找到对应母模板</small></div></div><div className="task-two-type-grid">{taskTwoTypes.map((item) => <article className={item.templateId === activeTemplate ? "active" : ""} key={item.id}><span>{item.templateId === "viewpoint" ? "模板 A" : "模板 B"}</span><h4>{item.title}<small>{item.titleEn}</small></h4><p>{item.note}</p></article>)}</div></section>
+      {activeTemplate === "viewpoint" && <section className="task-two-section"><div className="task-two-section-title"><span>02</span><div><b>三种开头 / THREE INTRODUCTIONS</b><small>根据题型只替换开头；其余三段保持一致</small></div></div><Accordion type="single" collapsible className="task-two-intro-accordion">{viewpointIntroductions.map((intro, index) => <AccordionItem key={intro.type} value={`intro-${index}`}><AccordionTrigger className="task-two-intro-trigger"><span>0{index + 1}</span><div><b>{intro.type}</b><small>选择后填入争议、立场和两个理由</small></div></AccordionTrigger><AccordionContent className="task-two-intro-content"><p className="task-two-english">{intro.english}</p><p className="task-two-chinese">{intro.chinese}</p></AccordionContent></AccordionItem>)}</Accordion></section>}
+      <section className="task-two-section"><div className="task-two-section-title"><span>{activeTemplate === "viewpoint" ? "03" : "02"}</span><div><b>{activeTemplate === "viewpoint" ? "统一主体与结尾 / SHARED BODY & CLOSE" : "报告型四段 / FOUR-PARAGRAPH REPORT"}</b><small>{activeTemplate === "viewpoint" ? "开—让—转—结" : "问题—原因—措施—结论"}</small></div></div><div className="task-two-paragraphs">{activeParagraphs.map((paragraph, index) => <article key={paragraph.title}><div className="task-two-paragraph-index">0{index + 1}</div><div><div className="task-two-paragraph-title"><h4>{paragraph.title}</h4><span>{paragraph.titleEn}</span></div><p className="task-two-english">{paragraph.english}</p><p className="task-two-chinese">{paragraph.chinese}</p>{paragraph.fillCount && <div className="task-two-fill"><b>临场填空 / FILL</b><span>{paragraph.fillCount}</span></div>}</div></article>)}</div></section>
+      <section className="task-two-usage"><div className="task-two-section-title"><span>{activeTemplate === "viewpoint" ? "04" : "03"}</span><div><b>怎么使用 / EXAM WORKFLOW</b><small>40 分钟内的三段时间分配</small></div></div><div className="task-two-usage-grid">{taskTwoUsage.map((item, index) => <article key={item.time}><span>0{index + 1}</span><b>{item.time}</b><h4>{item.title}</h4><p>{item.detail}</p></article>)}</div></section>
+      <div className="task-two-rules"><div><b>最重要 / KEY RULES</b><span>模板是轨道，不是内容本身。所有填空必须紧扣题目，不能为了套模板而加入无关论点。</span></div><ul>{taskTwoFillHints.map((hint) => <li key={hint}>{hint}</li>)}</ul></div>
+    </div>
   );
 }
 
