@@ -4,6 +4,7 @@ import { taskOneChecklist, taskOneTemplates } from "@/lib/writingTemplates";
 import { speakingPart2Cards, speakingPart2StudySteps } from "@/lib/speakingPart2Templates";
 import { languageBank, orefSteps, partOneExamples, personaDimensions, universalDetails } from "@/lib/speakingPart1System";
 import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publicPart2Index";
+import { publicTaskOnePrompts, publicTaskOneSources, type TaskOneKind } from "@/lib/publicTask1Index";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, Search, X } from "lucide-react";
 
@@ -112,7 +113,31 @@ function TaskOnePanel() {
       </div>
       <div className="task-checklist"><div><span>考试只做这个 / EXAM CHECKLIST</span><strong>{activeTemplate === "dynamic" ? "动态图" : "静态图"}</strong></div><div className="checklist-items">{taskOneChecklist[activeTemplate].map((item) => <span key={item}>{item}</span>)}</div></div>
       <div className="task-warning"><b>最重要 / KEY RULE</b><span>模板可以删句，绝对不要为了写完模板而描述图里不存在的趋势。</span><small>You may remove sentences. Never describe a trend that does not appear in the chart.</small></div>
+      <PublicTaskOneIndex />
     </div>
+  );
+}
+
+function PublicTaskOneIndex() {
+  const [filter, setFilter] = useState<"all" | TaskOneKind>("all");
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const visiblePrompts = publicTaskOnePrompts.filter((item) => (filter === "all" || item.kind === filter) && (!normalizedQuery || `${item.promptEn} ${item.promptZh} ${item.chartType}`.toLowerCase().includes(normalizedQuery)));
+  const filters: { value: "all" | TaskOneKind; label: string; labelEn: string }[] = [
+    { value: "all", label: "全部", labelEn: "All" },
+    { value: "dynamic", label: "动态图", labelEn: "Dynamic" },
+    { value: "static", label: "静态图", labelEn: "Static" },
+    { value: "map-process", label: "地图流程", labelEn: "Maps & Process" },
+  ];
+
+  return (
+    <section className="task-one-index-panel">
+      <div className="task-index-head"><div><span className="speaking-section-label">PUBLIC PRACTICE INDEX / 公开练习题索引</span><h4>小作文题目 × 模板方向</h4><p>题目为公开练习主题的简短索引，用来训练题型识别与模板选择；并非完整剑桥出版题库或图表原件的转载。</p></div><div className="task-index-count"><strong>{visiblePrompts.length}</strong><span>题目 / PROMPTS</span></div></div>
+      <div className="task-index-controls"><div className="prompt-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索题目 / Search Task 1" aria-label="搜索小作文题目" /></div><div className="prompt-filters">{filters.map((item) => <button key={item.value} className={filter === item.value ? "active" : ""} onClick={() => setFilter(item.value)}>{item.label}<small>{item.labelEn}</small></button>)}</div></div>
+      <div className="task-index-list">{visiblePrompts.map((item) => <article key={item.id}><div className={`task-kind-chip ${item.kind}`}><span>{item.kindLabel}</span><small>{item.chartType}</small></div><div className="task-index-prompt"><b>{item.promptEn}</b><small>{item.promptZh}</small></div><div className={`task-template-chip ${item.kind}`}><span>建议模板</span><b>{item.template}</b></div><small className="task-index-source">{item.source}</small></article>)}</div>
+      {visiblePrompts.length === 0 && <div className="prompt-empty">未找到匹配题目。可尝试图表类型或“地图”“变化”等关键词。</div>}
+      <div className="task-index-sources"><span>来源 / SOURCES</span>{publicTaskOneSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}<ArrowUpRight size={12} /></a>)}</div>
+    </section>
   );
 }
 
