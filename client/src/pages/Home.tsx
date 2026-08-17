@@ -28,7 +28,7 @@ export default function Home() {
   return (
     <main className="minimal-page">
       <header className="topbar">
-        <Link href="/" className="wordmark"><span className="wordmark-mark"><span /><span /><span /><span /></span><span><b>翰林师兄</b><small>HANLIN SENIOR'S</small></span></Link>
+        <Link href="/" className="wordmark"><span className="wordmark-mark"><span /><span /><span /><span /></span><span><b>HL · 汉林师兄</b><small>HL HANLIN SENIOR'S</small></span></Link>
         <nav className={menuOpen ? "topnav open" : "topnav"}>
           <a href="#modules">四大模块 <small>MODULES</small></a>
           <a href="#chapters">模板章节 <small>CHAPTERS</small></a>
@@ -39,7 +39,7 @@ export default function Home() {
 
       <section className="minimal-hero">
         <div className="hero-overline"><span /> HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</div>
-        <h1>翰林师兄的<br /><em>雅思模板库</em></h1>
+        <h1><small>HL</small> 汉林师兄的<br /><em>雅思模板库</em></h1>
         <p>个人应试模板，清晰归档，随时复习。<br /><span>Personal templates. Clear structure. Your own route.</span></p>
         <a className="hero-link" href="#modules">进入四大模块 <ChevronRight size={15} /></a>
         <div className="hero-orbit"><img src="/manus-storage/ielts-route-mark_238959ae.png" alt="Hanlin Senior IELTS library mark" /></div>
@@ -51,7 +51,7 @@ export default function Home() {
         <div className="module-grid">
           {subjects.map((subject, index) => {
             const Icon = subject.icon;
-            return <button key={subject.key} className={`module-card ${activeKey === subject.key ? "active" : ""}`} onClick={() => selectSubject(subject.key)}>
+            return <button key={subject.key} aria-pressed={activeKey === subject.key} className={`module-card ${activeKey === subject.key ? "active" : ""}`} onClick={() => selectSubject(subject.key)}>
               <div className="module-node"><span>0{index + 1}</span><i /></div>
               <Icon className="module-icon" size={31} strokeWidth={1.45} />
               <strong>{subject.zh}</strong><b>{subject.en}</b>
@@ -64,6 +64,9 @@ export default function Home() {
 
       <section className="chapters-section" id="chapters">
         <div className="section-topline"><span>02 / 当前章节</span><span>CURRENT CHAPTERS</span></div>
+        <div className="chapter-switcher" aria-label="切换当前科目">
+          {subjects.map((subject) => { const Icon = subject.icon; return <button key={subject.key} className={activeKey === subject.key ? "selected" : ""} onClick={() => setActiveKey(subject.key)}><Icon size={15} /><span>{subject.zh}</span><small>{subject.en}</small></button>; })}
+        </div>
         <div className="chapters-head"><div><div className="active-label"><ActiveIcon size={17} /> ACTIVE MODULE</div><h2>{active.zh} <em>{active.en}</em></h2></div><span className="chapter-note">你的个人模板<br /><small>YOUR PERSONAL NOTES</small></span></div>
         <div className="chapter-track">
           {active.sections.map((section, index) => <button className="chapter-pill" key={section}>
@@ -73,7 +76,7 @@ export default function Home() {
         <div className="glass-note"><span className="glass-dot" /><div><b>模板空间已准备好</b><small>Your template space is ready.</small></div></div>
       </section>
 
-      <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>翰林师兄的雅思模板库</b><small>HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
+      <footer className="minimal-footer"><span className="footer-mark"><span /><span /><span /></span><span><b>HL · 汉林师兄的雅思模板库</b><small>HL HANLIN SENIOR'S IELTS TEMPLATE LIBRARY</small></span><i>PERSONAL PLAYBOOK · 2026</i></footer>
     </main>
   );
 }
