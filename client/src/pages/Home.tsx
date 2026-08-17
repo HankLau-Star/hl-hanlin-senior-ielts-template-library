@@ -3,8 +3,9 @@ import { Link } from "wouter";
 import { taskOneChecklist, taskOneTemplates } from "@/lib/writingTemplates";
 import { speakingPart2Cards, speakingPart2StudySteps } from "@/lib/speakingPart2Templates";
 import { languageBank, orefSteps, partOneExamples, personaDimensions, universalDetails } from "@/lib/speakingPart1System";
+import { publicPart2Prompts, publicPart2Sources, type StoryId } from "@/lib/publicPart2Index";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, X } from "lucide-react";
+import { ArrowUpRight, BookOpen, ChevronRight, Headphones, Menu, Mic2, PenLine, Search, X } from "lucide-react";
 
 /** Design reminder: Apple-inspired calm glass study tool; minimal copy, bilingual hierarchy, four modules first. */
 
@@ -156,7 +157,32 @@ function SpeakingPartTwoPanel() {
           </AccordionContent>
         </AccordionItem>)}
       </Accordion>
+      <PublicPart2Index />
       <div className="speaking-study-steps"><div><span>考前落地 / STUDY PLAN</span><strong>三步法</strong></div><div>{speakingPart2StudySteps.map((step, index) => <p key={step}><b>0{index + 1}</b>{step}</p>)}</div></div>
     </div>
+  );
+}
+
+function PublicPart2Index() {
+  const [filter, setFilter] = useState<"all" | StoryId>("all");
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const visiblePrompts = publicPart2Prompts.filter((item) => (filter === "all" || item.storyId === filter) && (!normalizedQuery || `${item.promptEn} ${item.promptZh} ${item.category}`.toLowerCase().includes(normalizedQuery)));
+  const filters: { value: "all" | StoryId; label: string; labelEn: string }[] = [
+    { value: "all", label: "全部", labelEn: "All" },
+    { value: "person", label: "人物", labelEn: "Person" },
+    { value: "object", label: "物品", labelEn: "Object" },
+    { value: "experience", label: "经历", labelEn: "Experience" },
+    { value: "place", label: "地点", labelEn: "Place" },
+  ];
+
+  return (
+    <section className="public-index-panel">
+      <div className="public-index-head"><div><span className="speaking-section-label">PUBLIC PRACTICE INDEX / 公开练习题索引</span><h4>Part 2 题目 × 母题适配</h4><p>题目为公开练习主题的简短索引，用于训练归类与母题选择；并非完整剑桥套题或受限出版材料的转载。</p></div><div className="public-index-count"><strong>{visiblePrompts.length}</strong><span>题目 / PROMPTS</span></div></div>
+      <div className="public-index-controls"><div className="prompt-search"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索题目 / Search prompts" aria-label="搜索 Part 2 题目" /></div><div className="prompt-filters">{filters.map((item) => <button key={item.value} className={filter === item.value ? "active" : ""} onClick={() => setFilter(item.value)}>{item.label}<small>{item.labelEn}</small></button>)}</div></div>
+      <div className="prompt-index-list">{visiblePrompts.map((item) => <article key={item.id}><div className="prompt-index-category">{item.category}</div><div className="prompt-index-prompt"><b>{item.promptEn}</b><small>{item.promptZh}</small></div><div className={`story-chip ${item.storyId}`}><span>适配母题</span><b>{item.storyLabel}</b></div><small className="prompt-source">{item.source}</small></article>)}</div>
+      {visiblePrompts.length === 0 && <div className="prompt-empty">未找到匹配题目。试试人物、物品、经历或地点关键词。</div>}
+      <div className="public-index-sources"><span>来源 / SOURCES</span>{publicPart2Sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}<ArrowUpRight size={12} /></a>)}</div>
+    </section>
   );
 }
