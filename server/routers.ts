@@ -1,28 +1,101 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
+import { createSpeakingTrainingRun, getSpeakingProfile, listSpeakingTrainingRuns, upsertSpeakingProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { buildCoachSystemPrompt, personalStoryContext, recentPublicPracticePrompts, type StoryId } from "./speakingCoach";
+
+const profileInput = z.object({
+  displayName: z.string().trim().min(1).max(96).default("刘涵"),
+  currentBand: z.string().trim().max(16).optional(),
+  targetBand: z.string().trim().max(16).default("7.0"),
+  strengths: z.string().trim().max(2000).optional(),
+  weakAreas: z.string().trim().max(2000).optional(),
+  interests: z.string().trim().max(2000).optional(),
+  personalContext: z.string().trim().max(4000).optional(),
+  preferredFeedback: z.enum(["gentle", "balanced", "direct"]).default("balanced"),
+});
+
+const storyIdSchema = z.enum(["person", "object", "experience", "place"]);
+
+function cleanOptional(value?: string) {
+  return value && value.length > 0 ? value : null;
+}
+
+function geminiError(message: string) {
+  return new TRPCError({ code: "PRECONDITION_FAILED", message });
+}
 
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
+  speakingCoach: router({
+    prompts: publicProcedure.query(() => recentPublicPracticePrompts),
+    storyCards: publicProcedure.query(() => personalStoryContext),
+    profile: protectedProcedure.query(({ ctx }) => getSpeakingProfile(ctx.user.id)),
+    saveProfile: protectedProcedure.input(profileInput).mutation(async ({ ctx, input }) => {
+      return upsertSpeakingProfile(ctx.user.id, {
+        displayName: input.displayName,
+        currentBand: cleanOptional(input.currentBand),
+        targetBand: input.targetBand,
+        strengths: cleanOptional(input.strengths),
+        weakAreas: cleanOptional(input.weakAreas),
+        interests: cleanOptional(input.interests),
+        personalContext: cleanOptional(input.personalContext),
+        preferredFeedback: input.preferredFeedback,
+      });
+    }),
+    history: protectedProcedure.query(({ ctx }) => listSpeakingTrainingRuns(ctx.user.id)),
+    generate: protectedProcedure.input(z.object({
+      promptId: z.string().min(1).max(96),
+      learnerDraft: z.string().trim().max(6000).optional(),
+      storyId: storyIdSchema.optional(),
+    })).mutation(async ({ ctx, input }) => {
+      const prompt = recentPublicPracticePrompts.find(item => item.id === input.promptId);
+      if (!prompt) throw new TRPCError({ code: "NOT_FOUND", message: "练习题未找到，请从近期题目索引中重新选择。" });
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+      const profile = await getSpeakingProfile(ctx.user.id);
+      const storyId = (input.storyId ?? prompt.storyId) as StoryId;
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) throw geminiError("Gemini API Key 尚未配置。请在项目设置中完成安全配置后重试。");
+
+      const systemPrompt = buildCoachSystemPrompt({ profile, storyId, speakingPart: prompt.part });
+      const userPrompt = `Practice prompt (${prompt.part}): ${prompt.title} / ${prompt.zh}\n\nLearner draft (optional): ${input.learnerDraft || "No draft yet. Create a first personalized answer."}\n\nUse the selected story card: ${personalStoryContext[storyId].title}.`;
+
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }] }),
+          },
+        );
+        const payload = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>; error?: { message?: string } };
+        if (!response.ok) {
+          await createSpeakingTrainingRun({ userId: ctx.user.id, promptId: prompt.id, promptTitle: prompt.title, speakingPart: prompt.part, sourceWindow: prompt.sourceWindow, linkedStoryId: storyId, learnerDraft: cleanOptional(input.learnerDraft), status: "failed" });
+          throw geminiError(`Gemini 暂时无法生成回答：${payload.error?.message || `请求失败（${response.status}）`}。请检查 API Key、免费层配额或稍后重试。`);
+        }
+        const answer = payload.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("\n").trim();
+        if (!answer) throw geminiError("Gemini 未返回可用回答，请稍后重试。");
+
+        await createSpeakingTrainingRun({ userId: ctx.user.id, promptId: prompt.id, promptTitle: prompt.title, speakingPart: prompt.part, sourceWindow: prompt.sourceWindow, linkedStoryId: storyId, learnerDraft: cleanOptional(input.learnerDraft), aiAnswer: answer, status: "completed" });
+        return { answer, prompt, story: personalStoryContext[storyId] };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw geminiError("训练请求未完成。请检查网络状态后重试。");
+      }
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

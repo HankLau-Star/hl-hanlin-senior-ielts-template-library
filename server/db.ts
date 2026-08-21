@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertSpeakingProfile, InsertSpeakingTrainingRun, InsertUser, speakingProfiles, speakingTrainingRuns, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,46 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function getSpeakingProfile(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(speakingProfiles).where(eq(speakingProfiles.userId, userId)).limit(1);
+  return rows[0];
+}
+
+export async function upsertSpeakingProfile(
+  userId: number,
+  profile: Omit<InsertSpeakingProfile, "id" | "userId" | "createdAt" | "updatedAt">,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+
+  const values: InsertSpeakingProfile = { userId, ...profile };
+  await db.insert(speakingProfiles).values(values).onDuplicateKeyUpdate({
+    set: {
+      displayName: profile.displayName,
+      currentBand: profile.currentBand,
+      targetBand: profile.targetBand,
+      strengths: profile.strengths,
+      weakAreas: profile.weakAreas,
+      interests: profile.interests,
+      personalContext: profile.personalContext,
+      preferredFeedback: profile.preferredFeedback,
+    },
+  });
+  return getSpeakingProfile(userId);
+}
+
+export async function createSpeakingTrainingRun(
+  run: Omit<InsertSpeakingTrainingRun, "id" | "createdAt">,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(speakingTrainingRuns).values(run);
+}
+
+export async function listSpeakingTrainingRuns(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(speakingTrainingRuns).where(eq(speakingTrainingRuns.userId, userId)).orderBy(desc(speakingTrainingRuns.createdAt)).limit(12);
+}

@@ -46,7 +46,7 @@ export default function Home() {
           <a href="#chapters">模板章节 <small>CHAPTERS</small></a>
         </nav>
         <button className="mobile-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="菜单">{menuOpen ? <X size={19} /> : <Menu size={19} />}</button>
-        <a className="topbar-button" href="#modules">开始学习 <span>START</span><ArrowUpRight size={14} /></a>
+        <a className="topbar-button" href="/speaking-trainer">口语训练 <span>AI LAB</span><ArrowUpRight size={14} /></a>
       </header>
 
       <section className="minimal-hero">
