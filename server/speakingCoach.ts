@@ -29,6 +29,15 @@ export const speakingFrameworkContext = {
   part3: "Part 3 使用六步逻辑：直接观点 → 解释原因 → 举例 → 对比或影响 → 让步 → 总结。按问题需要选择压力、习惯、科技算法、外部评价或原生家庭等逻辑链。",
 };
 
+export function getCoachText(content: string | Array<{ type: string; text?: string }>) {
+  if (typeof content === "string") return content.trim();
+  return content
+    .filter(part => part.type === "text")
+    .map(part => part.text || "")
+    .join("\n")
+    .trim();
+}
+
 export const recentPublicPracticePrompts = [
   { id: "may-aug-2026-creative-person", title: "A creative person you admire", zh: "一位你欣赏的有创意的人", part: "Part 2", storyId: "person" as StoryId, sourceWindow: "May–August 2026", sourceUrl: "https://resources.cathoven.com/ielts-speaking/cue-card-bank" },
   { id: "may-aug-2026-useful-tech", title: "A technology item that saves you time", zh: "一件帮你节省时间的科技产品", part: "Part 2", storyId: "object" as StoryId, sourceWindow: "May–August 2026", sourceUrl: "https://resources.cathoven.com/ielts-speaking/cue-card-bank" },

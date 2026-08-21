@@ -1,16 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-describe("Gemini API configuration", () => {
-  it("accepts the configured server-side API key", async () => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    expect(apiKey, "GEMINI_API_KEY must be configured for the speaking trainer").toBeTruthy();
+import { buildCoachSystemPrompt, getCoachText } from "./speakingCoach";
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey!)}`,
-    );
+describe("Built-in speaking coach integration", () => {
+  it("preserves the bilingual coaching contract without an external Gemini key", () => {
+    const prompt = buildCoachSystemPrompt({ speakingPart: "Part 2", storyId: "person" });
 
-    expect(response.ok, `Gemini model-list request failed with ${response.status}`).toBe(true);
-    const payload = (await response.json()) as { models?: unknown[] };
-    expect(Array.isArray(payload.models)).toBe(true);
-  }, 20_000);
+    expect(prompt).toContain("Recommended route / 推荐路径");
+    expect(prompt).toContain("Band 7-style answer");
+    expect(prompt).toContain("科隆多老师");
+    expect(prompt).not.toContain("GEMINI_API_KEY");
+  });
+
+  it("extracts visible text from plain and multipart model responses", () => {
+    expect(getCoachText("  A natural spoken answer.  ")).toBe("A natural spoken answer.");
+    expect(getCoachText([
+      { type: "text", text: "First paragraph." },
+      { type: "image_url" },
+      { type: "text", text: "Second paragraph." },
+    ])).toBe("First paragraph.\nSecond paragraph.");
+  });
 });

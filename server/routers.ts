@@ -3,9 +3,10 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { createSpeakingTrainingRun, getSpeakingProfile, listSpeakingTrainingRuns, upsertSpeakingProfile } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { invokeLLM } from "./_core/llm";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { buildCoachSystemPrompt, personalStoryContext, recentPublicPracticePrompts, type StoryId } from "./speakingCoach";
+import { buildCoachSystemPrompt, getCoachText, personalStoryContext, recentPublicPracticePrompts, type StoryId } from "./speakingCoach";
 
 const profileInput = z.object({
   displayName: z.string().trim().min(1).max(96).default("刘涵"),
@@ -24,7 +25,7 @@ function cleanOptional(value?: string) {
   return value && value.length > 0 ? value : null;
 }
 
-function geminiError(message: string) {
+function coachError(message: string) {
   return new TRPCError({ code: "PRECONDITION_FAILED", message });
 }
 
@@ -65,34 +66,27 @@ export const appRouter = router({
 
       const profile = await getSpeakingProfile(ctx.user.id);
       const storyId = (input.storyId ?? prompt.storyId) as StoryId;
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw geminiError("Gemini API Key 尚未配置。请在项目设置中完成安全配置后重试。");
 
       const systemPrompt = buildCoachSystemPrompt({ profile, storyId, speakingPart: prompt.part });
       const userPrompt = `Practice prompt (${prompt.part}): ${prompt.title} / ${prompt.zh}\n\nLearner draft (optional): ${input.learnerDraft || "No draft yet. Create a first personalized answer."}\n\nUse the selected story card: ${personalStoryContext[storyId].title}.`;
 
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }] }),
-          },
-        );
-        const payload = (await response.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>; error?: { message?: string } };
-        if (!response.ok) {
-          await createSpeakingTrainingRun({ userId: ctx.user.id, promptId: prompt.id, promptTitle: prompt.title, speakingPart: prompt.part, sourceWindow: prompt.sourceWindow, linkedStoryId: storyId, learnerDraft: cleanOptional(input.learnerDraft), status: "failed" });
-          throw geminiError(`Gemini 暂时无法生成回答：${payload.error?.message || `请求失败（${response.status}）`}。请检查 API Key、免费层配额或稍后重试。`);
-        }
-        const answer = payload.candidates?.[0]?.content?.parts?.map(part => part.text || "").join("\n").trim();
-        if (!answer) throw geminiError("Gemini 未返回可用回答，请稍后重试。");
+        const completion = await invokeLLM({
+          model: "gpt-5-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        });
+        const answer = getCoachText(completion.choices[0]?.message.content ?? "");
+        if (!answer) throw new Error("Built-in model returned an empty response");
 
         await createSpeakingTrainingRun({ userId: ctx.user.id, promptId: prompt.id, promptTitle: prompt.title, speakingPart: prompt.part, sourceWindow: prompt.sourceWindow, linkedStoryId: storyId, learnerDraft: cleanOptional(input.learnerDraft), aiAnswer: answer, status: "completed" });
         return { answer, prompt, story: personalStoryContext[storyId] };
       } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw geminiError("训练请求未完成。请检查网络状态后重试。");
+        console.error("[speakingCoach.generate] Built-in model request failed", error);
+        await createSpeakingTrainingRun({ userId: ctx.user.id, promptId: prompt.id, promptTitle: prompt.title, speakingPart: prompt.part, sourceWindow: prompt.sourceWindow, linkedStoryId: storyId, learnerDraft: cleanOptional(input.learnerDraft), status: "failed" });
+        throw coachError("训练助手暂时无法生成回答，请稍后重试。");
       }
     }),
   }),
